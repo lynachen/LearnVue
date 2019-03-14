@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>my vue</title>
+	<meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <!-- 删除默认的苹果工具栏和菜单栏 -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<!-- 在web app应用下状态条（屏幕顶部条）的颜色 -->
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<!-- 禁止了把数字转化为拨号链接 -->
+	<meta name="format-detection" content="telephone=no">   	
+    <!-- 引入YDUI样式 -->
+    <link rel="stylesheet" href="https://lynachen.github.io/plug-ins/vue-ydui/dist/ydui.rem.css" />
+    <!-- 引入自定义样式 -->
+    <link rel="stylesheet" href="https://lynachen.github.io/plug-ins/common.css" />    
+    <!-- 引入rem自适应类库 -->
+    <script src="https://lynachen.github.io/plug-ins/vue-ydui/dist/ydui.flexible.js"></script>    
+</head>
+<style>
+	.header {
+		display: flex;
+		margin: .2rem;
+	}
+	.header .btn-city {
+		width: 70%;
+	}
+	.header .btn-search {
+		width: 30%;
+		height: .9rem;
+		line-height: .9rem;
+		text-align: center;
+		background-color: #04be02;
+		font-size: .3rem;
+		color: #fff;
+	}
+</style>
+<body>
+	<div id="app">
+		<section class="g-flexview">
+			<div class="g-scrollview main-bg">
+				<div class="header">
+					<input class="btn-city" type="text" placeholder="请输入所要查询的城市名称" ref="city" />
+					<span class="btn btn-primary btn-search" @click="getVal()">查询</span>
+				</div>
+				<span v-text="allData.temp"></span>
+				<ul class="list-info">
+					<li class="my-city" v-text="address"></li>
+					<li class="my-temp" v-text="allData.temp"></li>
+					<li class="my-weather" v-text="allData.weather"></li>
+					<li class="my-windDirection" v-text="allData.windDirection"></li>
+					<li class="my-windPower" v-text="allData.windPower"></li>
+				</ul>
+			</div>
+		</section>
+	</div>	
+	
+	<!-- 引入 Vue -->
+	<script src="https://lynachen.github.io/plug-ins/axios-0.18.0/axios.min.js"></script>
+    <script src="https://lynachen.github.io/plug-ins/vue-2.6.8/vue.js"></script>
+	<!-- 引入组件库 -->
+	<script src="https://lynachen.github.io/plug-ins/vue-ydui/dist/ydui.rem.js"></script>	
+	<script>
+		window.onload = function(){
+			var vm = new Vue({
+				el:'#app',
+				data:{
+					city:'',//城市名称
+					allData:'',
+					address:'',
+				},
+				methods:{
+					//判断是否输入
+					getVal:function(){
+						var city = this.$refs.city.value
+						if(city==''){
+							this.$dialog.toast({
+			                    mes: '请输入城市名称',
+			                    timeout: 1500
+			                });
+						} else{
+							this.getCity()
+						}
+					},
+					getCity:function(){
+						var city=this.$refs.city.value
+						console.log(this.$refs.city.value) //获取value的值
+						axios.get('http://www.mxnzp.com/api/weather/current/'+city)
+						  	.then(function (ret) {
+						    	if(ret.data.code==1){
+//						    		var a=ret.data
+						    		var a = ret.data;
+						    		this.allData = a.data
+						    		this.address = a.data.address
+						    		console.log(this.address)
+						    	}else{
+
+						    	}
+						  	})
+						  	.catch(function (error) {
+						    	console.log(error);
+						  	});
+					}
+				}
+			})
+		}
+	</script>
+</body>
+</html>
