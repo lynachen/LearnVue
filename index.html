@@ -15,44 +15,62 @@
     <!-- 引入YDUI样式 -->
     <link rel="stylesheet" href="https://lynachen.github.io/plug-ins/vue-ydui/dist/ydui.rem.css" />
     <!-- 引入自定义样式 -->
-    <link rel="stylesheet" href="https://lynachen.github.io/plug-ins/common.css" />    
+    <link rel="stylesheet" href="https://lynachen.github.io/plug-ins/common.css" />  
+    <link rel="stylesheet" href="index.css" />
     <!-- 引入rem自适应类库 -->
     <script src="https://lynachen.github.io/plug-ins/vue-ydui/dist/ydui.flexible.js"></script>    
 </head>
-<style>
-	.header {
-		display: flex;
-		margin: .2rem;
-	}
-	.header .btn-city {
-		width: 70%;
-	}
-	.header .btn-search {
-		width: 30%;
-		height: .9rem;
-		line-height: .9rem;
-		text-align: center;
-		background-color: #04be02;
-		font-size: .3rem;
-		color: #fff;
-	}
-</style>
 <body>
 	<div id="app">
+		<div id="citySelect" v-show="isShow">
+			<header class="city-header">
+				<div class="back" @click="getShow()"></div>
+				<div class="tlt">城市选择</div>
+			</header>		
+			<!--选择城市S-->
+			<div class="city-wapper">
+				<div class="city-main">
+					<ul class="list-city" v-if="allList.length>0">
+						<li v-for="item in allList">
+							<a href="javascript:;" v-text="item.name">北京</a>
+							<ul>
+								<li v-for="list in item.pchilds">
+									<span v-text="list.name"></span>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<!--选择城市E-->
+		</div>
 		<section class="g-flexview">
 			<div class="g-scrollview main-bg">
+				<div class="weather-wrap">				
+					<!--<div class="sunny"></div>--> 				
+					<!--<div class="cloudy"></div>-->
+					<!--<div class="rainy"></div>
+					<div class="snowy"></div>
+					<div class="rainbow"></div>
+					<div class="starry"></div>
+					<div class="stormy"></div>-->
+				</div>				
 				<div class="header">
+					<h3 id="cityName" @click="getShow()">北京</h3>
+					<!--<span id="cityName" @click="getCity()">请选择</span>-->
+            		<!--<i class="triangle-down"></i>-->
+				</div>				
+				<!--<div class="header">
 					<input class="btn-city" type="text" placeholder="请输入所要查询的城市名称" ref="city" />
 					<span class="btn btn-primary btn-search" @click="getVal()">查询</span>
-				</div>
-				<span v-text="allData.temp"></span>
-				<ul class="list-info">
+				</div>-->
+				<!--<ul class="list-info">
 					<li class="my-city" v-text="address"></li>
 					<li class="my-temp" v-text="allData.temp"></li>
 					<li class="my-weather" v-text="allData.weather"></li>
 					<li class="my-windDirection" v-text="allData.windDirection"></li>
 					<li class="my-windPower" v-text="allData.windPower"></li>
-				</ul>
+				</ul>-->
 			</div>
 		</section>
 	</div>	
@@ -67,28 +85,64 @@
 			var vm = new Vue({
 				el:'#app',
 				data:{
+					isShow:false,
 					city:'',//城市名称
+					allList:'',//所有城市名称列表
+					allList2:'',
 					allData:'',
 					address:'',
 				},
+				created:function(){
+					
+				},
+				mounted:function(){
+					this.getCityList()
+				},
 				methods:{
-					//判断是否输入
-					getVal:function(){
-						var city = this.$refs.city.value
-						if(city==''){
-							this.$dialog.toast({
-			                    mes: '请输入城市名称',
-			                    timeout: 1500
-			                });
-						} else{
-							this.getCity()
-						}
+					//利用v-show隐藏或显示
+					getShow:function(){
+						this.isShow = !this.isShow
+					},					
+					getCityList:function(){
+						axios.get('http://www.mxnzp.com/api/address/list')
+						  	.then(function (ret) {  
+//						  		axios的回调函数，.then为请求成功的回调函数，而.catch为请求失败的回调函数。这两个回调函数都有各自独立的作用域，如果直接在里面访问 this，无法访问到 Vue 实例，怎么办？
+//						  		只要添加一个 .bind(this) 就能解决这个问题
+						    	if(ret.data.code==1){
+//						    		var a=ret.data
+						    		var a = ret.data;
+						    		if(a.data.length>0){
+						    			for(var i=0;i<a.data.length;i++){
+						    				this.allList2 = a.data[i].pchilds
+						    			}
+						    		}
+						    		this.allList = a.data
+//						    		console.log(this.allList)
+						    	}
+						  	}.bind(this))
+						  	.catch(function (error) {
+						    	console.log(error);
+						  	});
 					},
+					//判断是否输入
+//					getVal:function(){
+//						var city = this.$refs.city.value
+//						if(city==''){
+//							this.$dialog.toast({
+//			                    mes: '请输入城市名称',
+//			                    timeout: 1500
+//			                });
+//						} else{
+//							this.getCity()
+//						}
+//					},
 					getCity:function(){
 						var city=this.$refs.city.value
 						console.log(this.$refs.city.value) //获取value的值
 						axios.get('http://www.mxnzp.com/api/weather/current/'+city)
-						  	.then(function (ret) {
+						  	.then(function (ret) {  
+//						  		axios的回调函数，.then为请求成功的回调函数，而.catch为请求失败的回调函数。这两个回调函数都有各自独立的作用域，如果直接在里面访问 this，无法访问到 Vue 实例，怎么办？
+//						  		只要添加一个 .bind(this) 就能解决这个问题
 						    	if(ret.data.code==1){
 //						    		var a=ret.data
 						    		var a = ret.data;
@@ -96,9 +150,12 @@
 						    		this.address = a.data.address
 						    		console.log(this.address)
 						    	}else{
-
+									this.$dialog.toast({
+					                    mes: '请输入正确的城市名称',
+					                    timeout: 1500
+					                });
 						    	}
-						  	})
+						  	}.bind(this))
 						  	.catch(function (error) {
 						    	console.log(error);
 						  	});
@@ -107,5 +164,11 @@
 			})
 		}
 	</script>
+	<style>
+		/*body {
+			background-color: #2db0ba;
+		}*/
+	</style>
+
 </body>
 </html>
