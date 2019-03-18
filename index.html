@@ -45,21 +45,54 @@
 			<!--选择城市E-->
 		</div>
 		<section class="g-flexview">
-			<div class="g-scrollview main-bg">
-				<div class="weather-wrap">				
-					<!--<div class="sunny"></div>--> 				
-					<!--<div class="cloudy"></div>-->
-					<!--<div class="rainy"></div>
-					<div class="snowy"></div>
-					<div class="rainbow"></div>
-					<div class="starry"></div>
-					<div class="stormy"></div>-->
-				</div>				
+			<div class="g-scrollview main-bg">				
 				<div class="header">
-					<h3 id="cityName" @click="getShow()">北京</h3>
+					<div class="h-l">
+						<h3 @click="getShow()" ref="city">北京</h3>
+						<p v-text="allCurrent.reportTime?allCurrent.reportTime.substring(0,10):''"></p>	
+					</div>
+					<div class="h-r">
+						<div class="weather-wrap" v-if="allCurrent.weather">				
+							<div class="sunny" v-if="allCurrent.weather.indexOf('晴')!=-1"></div> 				
+							<div class="cloudy" v-else-if="allCurrent.weather.indexOf('云')!=-1"></div>
+							<div class="rainy" v-else-if="allCurrent.weather.indexOf('雨')!=-1"></div>
+							<div class="snowy" v-else-if="allCurrent.weather.indexOf('雪')!=-1"></div>
+							<div class="stormy" v-else-if="allCurrent.weather.indexOf('雷')!=-1"></div>
+							<div class="cloudy" v-else></div>
+						</div>						
+					</div>				
 					<!--<span id="cityName" @click="getCity()">请选择</span>-->
             		<!--<i class="triangle-down"></i>-->
-				</div>				
+				</div>
+				<div class="content">
+					<p class="temp" v-text="allCurrent.temp"></p>
+					<p class="weather" v-text="allCurrent.weather"></p>	
+				</div>
+				<div class="footer">
+					<ul class="list-current">
+						<li>
+							<p>发布时间</p>
+							<p v-text="allCurrent.reportTime?allCurrent.reportTime.substring(11,16):''"></p>
+						</li>
+						<li>
+							<p v-text="allCurrent.windDirection+'风'"></p>
+							<p v-text="allCurrent.windPower"></p>
+						</li>
+						<li>
+							<p>相对湿度</p>
+							<p v-text="allCurrent.humidity"></p>
+						</li>
+					</ul>
+					<ul class="list-future" v-if="allFuture.length>0">
+						<li v-for="item2 in allFuture">
+							<p v-text="item2.date"></p>
+							<p v-text="item2.dayWeather+' /  '+item2.nightWeather"></p>
+							<p v-text="item2.dayTemp+' / '+item2.nightTemp"></p>
+							<p v-text="item2.dayWindDirection+'风'"></p>
+							<p v-text="item2.dayWindPower"></p>
+						</li>
+					</ul>
+				</div>
 				<!--<div class="header">
 					<input class="btn-city" type="text" placeholder="请输入所要查询的城市名称" ref="city" />
 					<span class="btn btn-primary btn-search" @click="getVal()">查询</span>
@@ -88,21 +121,23 @@
 					isShow:false,
 					city:'',//城市名称
 					allList:'',//所有城市名称列表
-					allList2:'',
-					allData:'',
-					address:'',
+					allCurrent:'',//今天天气
+					allFuture:'',//未来天气
 				},
 				created:function(){
 					
 				},
 				mounted:function(){
 					this.getCityList()
+					this.getCurrent()
+					this.getFuture()
 				},
 				methods:{
 					//利用v-show隐藏或显示
 					getShow:function(){
 						this.isShow = !this.isShow
-					},					
+					},		
+					//获取城市列表
 					getCityList:function(){
 						axios.get('http://www.mxnzp.com/api/address/list')
 						  	.then(function (ret) {  
@@ -113,11 +148,11 @@
 						    		var a = ret.data;
 						    		if(a.data.length>0){
 						    			for(var i=0;i<a.data.length;i++){
-						    				this.allList2 = a.data[i].pchilds
+						    			
 						    			}
 						    		}
 						    		this.allList = a.data
-//						    		console.log(this.allList)
+						    		console.log(this.allList.length)
 						    	}
 						  	}.bind(this))
 						  	.catch(function (error) {
@@ -136,17 +171,15 @@
 //							this.getCity()
 //						}
 //					},
-					getCity:function(){
-						var city=this.$refs.city.value
-						console.log(this.$refs.city.value) //获取value的值
+					//今天天气
+					getCurrent:function(){
+						var city=this.$refs.city.innerText
+						console.log(this.$refs.city.innerText) 
 						axios.get('http://www.mxnzp.com/api/weather/current/'+city)
 						  	.then(function (ret) {  
-//						  		axios的回调函数，.then为请求成功的回调函数，而.catch为请求失败的回调函数。这两个回调函数都有各自独立的作用域，如果直接在里面访问 this，无法访问到 Vue 实例，怎么办？
-//						  		只要添加一个 .bind(this) 就能解决这个问题
 						    	if(ret.data.code==1){
-//						    		var a=ret.data
 						    		var a = ret.data;
-						    		this.allData = a.data
+						    		this.allCurrent = a.data
 						    		this.address = a.data.address
 						    		console.log(this.address)
 						    	}else{
@@ -159,15 +192,45 @@
 						  	.catch(function (error) {
 						    	console.log(error);
 						  	});
-					}
+					},
+					//未来天气
+					getFuture:function(){
+						var city=this.$refs.city.innerText
+						console.log(this.$refs.city.innerText) //获取value的值
+						axios.get('http://www.mxnzp.com/api/weather/forecast/'+city)
+						  	.then(function (ret) {  
+						    	if(ret.data.code==1){
+						    		var a = ret.data;
+						    		if(a.data.forecasts.length>0){
+						    			for(var i=0;i<a.data.length;i++){
+//						    				consoel.log(a.data[i].forecasts)
+						    			}
+						    		}
+						    		this.allFuture = a.data.forecasts
+						    		console.log(this.allFuture)
+						    	}else{
+									this.$dialog.toast({
+					                    mes: '请输入正确的城市名称',
+					                    timeout: 1500
+					                });
+						    	}
+						  	}.bind(this))
+						  	.catch(function (error) {
+						    	console.log(error);
+						  	});
+					},
 				}
 			})
 		}
 	</script>
 	<style>
-		/*body {
+		body {
 			background-color: #2db0ba;
-		}*/
+		    width: 100%;
+		    height: 100%;
+		    position: relative;
+		    font-weight: 100;
+		}
 	</style>
 
 </body>
